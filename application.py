@@ -1,8 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 import logging
-import builtins
 import io
-import sys
 from contextlib import redirect_stdout
 
 logging.basicConfig(level=logging.INFO)
