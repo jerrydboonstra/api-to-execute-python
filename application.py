@@ -1,5 +1,9 @@
 from flask import Flask, request, jsonify, render_template
 import logging
+import builtins
+import io
+import sys
+from contextlib import redirect_stdout
 
 logging.basicConfig(level=logging.INFO)
 
@@ -28,12 +32,23 @@ def execute():
 
     logging.info(f"Executing code: {code}")
     response = {}
+    output = io.StringIO()
+    safe_builtins = {
+        'abs': abs, 'all': all, 'any': any, 'bin': bin,
+        'bool': bool, 'chr': chr, 'dict': dict, 'float': float,
+        'int': int, 'len': len, 'list': list, 'max': max,
+        'min': min, 'ord': ord, 'pow': pow, 'range': range,
+        'round': round, 'set': set, 'str': str, 'sum': sum,
+        'tuple': tuple, 'type': type, 'print': print
+    }
     try:
-        exec(code, {"__builtins__": None}, response)
+        with redirect_stdout(output):
+            exec(code, {"__builtins__": safe_builtins}, response)
     except Exception as e:
         logging.error(f"Error executing code: {str(e)}")
         return jsonify({"error": str(e)}), 500
     
+    response['output'] = output.getvalue()
     logging.info(f"Execution successful. Response: {response}")
     return jsonify(response)
 
